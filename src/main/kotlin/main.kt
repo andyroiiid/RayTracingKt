@@ -5,7 +5,7 @@ fun colorToString(color: Vector3): String {
     val r = (color.x * 255).toInt()
     val g = (color.y * 255).toInt()
     val b = (color.z * 255).toInt()
-    return "$r $g $b\t"
+    return "$r $g $b"
 }
 
 fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
@@ -41,10 +41,10 @@ fun main() {
     val metalRough = MetalMaterial(Vector3(0.8, 0.8, 0.8), 1.0)
 
     val world = HittableList()
-    world.add(Sphere(Vector3(-1.0, 0.0, -1.0), 0.5, metal))
-    world.add(Sphere(Vector3(0.0, 0.0, -1.0), 0.5, red))
-    world.add(Sphere(Vector3(1.0, 0.0, -1.0), 0.5, metalRough))
-    world.add(Sphere(Vector3(0.0, -100.5, -1.0), 100.0, blue))
+    world.add(Sphere(Vector3(-1.0, 0.0, -1.5), 0.5, metal))
+    world.add(Sphere(Vector3(0.0, 0.0, -1.5), 0.5, red))
+    world.add(Sphere(Vector3(1.0, 0.0, -1.5), 0.5, metalRough))
+    world.add(Sphere(Vector3(0.0, -100.5, -1.5), 100.0, blue))
 
     val out = File("test.ppm").printWriter()
     out.println("P3")
