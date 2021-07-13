@@ -1,6 +1,6 @@
 import kotlin.math.sqrt
 
-class Sphere(private val center: Vector3, private val radius: Double) : Hittable() {
+class Sphere(private val center: Vector3, private val radius: Double, private val material: Material) : Hittable() {
     override fun hit(ray: Ray, tMin: Double, tMax: Double): HitRecord? {
         val oc = ray.origin - center
         val a = ray.direction.lengthSquared()
@@ -20,6 +20,6 @@ class Sphere(private val center: Vector3, private val radius: Double) : Hittable
 
         val point = ray.at(root)
         val (frontFace, normal) = ray.fixNormal((point - center) / radius)
-        return HitRecord(root, point, frontFace, normal)
+        return HitRecord(root, point, frontFace, normal, material)
     }
 }

@@ -3,13 +3,21 @@ import kotlin.math.sqrt
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
     operator fun unaryMinus() = Vector3(-x, -y, -z)
 
+    operator fun plus(s: Double) = Vector3(x + s, y + s, z + s)
+
     operator fun plus(v: Vector3) = Vector3(x + v.x, y + v.y, z + v.z)
+
+    operator fun minus(s: Double) = Vector3(x - s, y - s, z - s)
 
     operator fun minus(v: Vector3) = Vector3(x - v.x, y - v.y, z - v.z)
 
     operator fun times(s: Double) = Vector3(x * s, y * s, z * s)
 
+    operator fun times(v: Vector3) = Vector3(x * v.x, y * v.y, z * v.z)
+
     operator fun div(s: Double) = Vector3(x / s, y / s, z / s)
+
+    operator fun div(v: Vector3) = Vector3(x / v.x, y * v.y, z * v.z)
 
     fun dot(v: Vector3): Double = x * v.x + y * v.y + z * v.z
 
@@ -24,4 +32,6 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     )
 
     fun normalized(): Vector3 = this / length()
+
+    fun reflect(v: Vector3): Vector3 = v - 2.0 * dot(v) * this
 }

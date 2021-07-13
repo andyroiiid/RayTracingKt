@@ -14,8 +14,12 @@ fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
 
     val hit = world.hit(ray, 0.0001, Double.POSITIVE_INFINITY)
     if (hit != null) {
-        val scatteredRay = Ray(hit.point, randomInHemisphere(hit.normal))
-        return 0.5 * raytrace(scatteredRay, world, depth - 1)
+        val scatter = hit.material.scatter(ray, hit)
+        return if (scatter.dropRay) {
+            Vector3(0.0, 0.0, 0.0)
+        } else {
+            scatter.attenuation * raytrace(scatter.scatteredRay, world, depth - 1)
+        }
     }
 
     val dir = ray.direction.normalized()
@@ -31,9 +35,16 @@ fun main() {
 
     val camera = Camera(aspectRatio, 2.0)
 
+    val blue = LambertianMaterial(Vector3(0.4, 0.8, 1.0))
+    val red = LambertianMaterial(Vector3(1.0, 0.0, 0.0))
+    val metal = MetalMaterial(Vector3(0.8, 0.8, 0.8), 0.3)
+    val metalRough = MetalMaterial(Vector3(0.8, 0.8, 0.8), 1.0)
+
     val world = HittableList()
-    world.add(Sphere(Vector3(0.0, 0.0, -1.0), 0.5))
-    world.add(Sphere(Vector3(0.0, -100.5, -1.0), 100.0))
+    world.add(Sphere(Vector3(-1.0, 0.0, -1.0), 0.5, metal))
+    world.add(Sphere(Vector3(0.0, 0.0, -1.0), 0.5, red))
+    world.add(Sphere(Vector3(1.0, 0.0, -1.0), 0.5, metalRough))
+    world.add(Sphere(Vector3(0.0, -100.5, -1.0), 100.0, blue))
 
     val out = File("test.ppm").printWriter()
     out.println("P3")
