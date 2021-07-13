@@ -8,22 +8,26 @@ fun colorToString(color: Vector3): String {
     return "$r $g $b"
 }
 
+fun raytraceSky(ray: Ray): Vector3 {
+    val dir = ray.direction.normalized()
+    return mix(Vector3(1.0, 1.0, 1.0), Vector3(0.5, 0.7, 1.0), 0.5 * dir.y + 0.5)
+}
+
 fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
     if (depth <= 0)
         return Vector3(0.0, 0.0, 0.0)
 
     val hit = world.hit(ray, 0.0001, Double.POSITIVE_INFINITY)
-    if (hit != null) {
+    return if (hit != null) {
         val scatter = hit.material.scatter(ray, hit)
-        return if (scatter.dropRay) {
+        if (scatter.dropRay) {
             Vector3(0.0, 0.0, 0.0)
         } else {
             scatter.attenuation * raytrace(scatter.scatteredRay, world, depth - 1)
         }
+    } else {
+        raytraceSky(ray)
     }
-
-    val dir = ray.direction.normalized()
-    return mix(Vector3(1.0, 1.0, 1.0), Vector3(0.5, 0.7, 1.0), 0.5 * dir.y + 0.5)
 }
 
 fun main() {
