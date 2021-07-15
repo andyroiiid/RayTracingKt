@@ -1,16 +1,11 @@
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
+import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 import kotlin.math.PI
-import kotlin.text.StringBuilder
 import kotlin.random.Random
-
-fun colorToString(color: Vector3): String {
-    val r = (color.x * 255).toInt()
-    val g = (color.y * 255).toInt()
-    val b = (color.z * 255).toInt()
-    return "$r $g $b\t"
-}
 
 fun raytraceSky(ray: Ray): Vector3 {
     val dir = ray.direction.normalized()
@@ -83,26 +78,20 @@ fun generateWorld(): HittableList {
     return world
 }
 
-fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int = 8): List<StringBuilder> {
-    val aspectRatio = imageWidth.toDouble() / imageHeight.toDouble()
-
-    val position = Vector3(13.0, 2.0, 3.0)
-    val target = Vector3(0.0, 0.0, 0.0)
-
+fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int): List<MutableList<Int>> {
     val camera = Camera(
-        position,
-        target,
+        Vector3(13.0, 2.0, 3.0),
+        Vector3(0.0, 0.0, 0.0),
         Vector3(0.0, 1.0, 0.0),
         PI / 6.0,
-        aspectRatio,
+        imageWidth.toDouble() / imageHeight.toDouble(),
         0.1,
         10.0
     )
 
     val world = generateWorld()
 
-    val outputs = List(imageHeight) { StringBuilder() }
-
+    val outputs = List(imageHeight) { mutableListOf<Int>() }
     val nextLine = AtomicInteger(0)
     val threads = List(numThreads) {
         thread(true) {
@@ -120,7 +109,7 @@ fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numTh
                     }
                     color /= samples.toDouble()
                     color = gammaCorrect(color)
-                    output.append(colorToString(color))
+                    output.add(Color(color.x.toFloat(), color.y.toFloat(), color.z.toFloat()).rgb)
                 }
 
                 println("finished line $y")
@@ -139,14 +128,15 @@ fun main() {
     val imageWidth = 800
     val imageHeight = 600
 
-    val outputs = render(imageWidth, imageHeight, 64, 32)
+    val outputs = render(imageWidth, imageHeight, 32, 32, 16)
 
-    val out = File("test.ppm").printWriter()
-    out.println("P3")
-    out.println("$imageWidth $imageHeight")
-    out.println("255")
-    outputs.asReversed().forEach {
-        out.println(it.toString())
+    val image = BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB)
+    for (y in 0 until imageHeight) {
+        val outputY = imageHeight - 1 - y
+        for (x in 0 until imageWidth) {
+            image.setRGB(x, y, outputs[outputY][x])
+        }
     }
-    out.flush()
+
+    ImageIO.write(image, "png", File("test.png"))
 }
