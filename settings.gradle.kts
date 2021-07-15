@@ -1,1 +1,1 @@
-rootProject.name = "RayTracing"
+rootProject.name = "RayTracingKt"
