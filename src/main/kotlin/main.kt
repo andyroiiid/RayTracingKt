@@ -1,6 +1,7 @@
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+import kotlin.math.PI
 import kotlin.text.StringBuilder
 import kotlin.random.Random
 
@@ -36,19 +37,25 @@ fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
 fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int = 8): List<StringBuilder> {
     val aspectRatio = imageWidth.toDouble() / imageHeight.toDouble()
 
-    val camera = Camera(aspectRatio, 2.0)
+    val camera = Camera(
+        Vector3(-2.0, 2.0, 1.0),
+        Vector3(0.0, 0.0, 0.0),
+        Vector3(0.0, 1.0, 0.0),
+        PI / 4.0,
+        aspectRatio
+    )
 
-    val blue = LambertianMaterial(Vector3(0.4, 0.8, 1.0))
+    val ground = LambertianMaterial(Vector3(0.8, 0.8, 1.0))
     val red = LambertianMaterial(Vector3(1.0, 0.0, 0.0))
     val metal = MetalMaterial(Vector3(0.8, 0.8, 0.8), 0.3)
     val glass = DielectricMaterial(1.5)
 
     val world = HittableList()
-    world.add(Sphere(Vector3(-1.0, 0.0, -1.5), 0.5, glass))
-    world.add(Sphere(Vector3(-1.0, 0.0, -1.5), -0.45, glass))
-    world.add(Sphere(Vector3(0.0, 0.0, -1.5), 0.5, red))
-    world.add(Sphere(Vector3(1.0, 0.0, -1.5), 0.5, metal))
-    world.add(Sphere(Vector3(0.0, -100.5, -1.5), 100.0, blue))
+    world.add(Sphere(Vector3(-1.0, 0.0, 0.0), 0.5, glass))
+    world.add(Sphere(Vector3(-1.0, 0.0, 0.0), -0.45, glass))
+    world.add(Sphere(Vector3(0.0, 0.0, 0.0), 0.5, red))
+    world.add(Sphere(Vector3(1.0, 0.0, 0.0), 0.5, metal))
+    world.add(Sphere(Vector3(0.0, -100.5, 0.0), 100.0, ground))
 
     val outputs = List(imageHeight) { StringBuilder() }
 
