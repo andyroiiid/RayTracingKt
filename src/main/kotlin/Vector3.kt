@@ -1,7 +1,6 @@
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
     operator fun unaryMinus() = Vector3(-x, -y, -z)
@@ -43,13 +42,5 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         val rOutPerpendicular = etaIOverEtaT * (v + cosTheta * this)
         val rOutParallel = -sqrt(abs(1.0 - rOutPerpendicular.lengthSquared())) * this
         return rOutPerpendicular + rOutParallel
-    }
-
-    companion object {
-        fun random() = Vector3(
-            Random.nextDouble(),
-            Random.nextDouble(),
-            Random.nextDouble()
-        )
     }
 }
