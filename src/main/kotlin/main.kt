@@ -37,17 +37,22 @@ fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
 fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int = 8): List<StringBuilder> {
     val aspectRatio = imageWidth.toDouble() / imageHeight.toDouble()
 
+    val position = Vector3(3.0, 3.0, 2.0)
+    val target = Vector3(0.0, 0.0, 0.0)
+
     val camera = Camera(
-        Vector3(-2.0, 2.0, 1.0),
-        Vector3(0.0, 0.0, 0.0),
+        position,
+        target,
         Vector3(0.0, 1.0, 0.0),
-        PI / 4.0,
-        aspectRatio
+        PI / 6.0,
+        aspectRatio,
+        1.0,
+        (target - position).length()
     )
 
-    val ground = LambertianMaterial(Vector3(0.8, 0.8, 1.0))
+    val ground = LambertianMaterial(Vector3(0.8, 0.8, 0.0))
     val red = LambertianMaterial(Vector3(1.0, 0.0, 0.0))
-    val metal = MetalMaterial(Vector3(0.8, 0.8, 0.8), 0.3)
+    val metal = MetalMaterial(Vector3(0.8, 0.6, 0.2), 0.3)
     val glass = DielectricMaterial(1.5)
 
     val world = HittableList()

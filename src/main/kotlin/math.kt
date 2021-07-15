@@ -11,6 +11,16 @@ fun clamp(x: Double, min: Double, max: Double) = min(max(x, min), max)
 
 fun clamp01(x: Double) = clamp(x, 0.0, 1.0)
 
+fun randomOnCircle(): Vector3 {
+    val theta = 2.0 * PI * Random.nextDouble()
+    return Vector3(cos(theta), sin(theta), 0.0)
+}
+
+fun randomInCircle(): Vector3 {
+    val r = sqrt(Random.nextDouble())
+    return randomOnCircle() * r
+}
+
 fun randomOnSphere(): Vector3 {
     val theta = 2.0 * PI * Random.nextDouble()
     val phi = acos(2.0 * Random.nextDouble() - 1.0)
