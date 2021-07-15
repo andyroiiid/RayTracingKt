@@ -1,3 +1,5 @@
+import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.sqrt
 
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
@@ -34,4 +36,11 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     fun normalized(): Vector3 = this / length()
 
     fun reflect(v: Vector3): Vector3 = v - 2.0 * dot(v) * this
+
+    fun refract(v: Vector3, etaIOverEtaT: Double): Vector3 {
+        val cosTheta = min(-this.dot(v), 1.0)
+        val rOutPerpendicular = etaIOverEtaT * (v + cosTheta * this)
+        val rOutParallel = -sqrt(abs(1.0 - rOutPerpendicular.lengthSquared())) * this
+        return rOutPerpendicular + rOutParallel
+    }
 }

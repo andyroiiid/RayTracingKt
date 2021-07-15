@@ -42,12 +42,13 @@ fun main() {
     val blue = LambertianMaterial(Vector3(0.4, 0.8, 1.0))
     val red = LambertianMaterial(Vector3(1.0, 0.0, 0.0))
     val metal = MetalMaterial(Vector3(0.8, 0.8, 0.8), 0.3)
-    val metalRough = MetalMaterial(Vector3(0.8, 0.8, 0.8), 1.0)
+    val glass = DielectricMaterial(1.5)
 
     val world = HittableList()
-    world.add(Sphere(Vector3(-1.0, 0.0, -1.5), 0.5, metal))
+    world.add(Sphere(Vector3(-1.0, 0.0, -1.5), 0.5, glass))
+    world.add(Sphere(Vector3(-1.0, 0.0, -1.5), -0.45, glass))
     world.add(Sphere(Vector3(0.0, 0.0, -1.5), 0.5, red))
-    world.add(Sphere(Vector3(1.0, 0.0, -1.5), 0.5, metalRough))
+    world.add(Sphere(Vector3(1.0, 0.0, -1.5), 0.5, metal))
     world.add(Sphere(Vector3(0.0, -100.5, -1.5), 100.0, blue))
 
     val out = File("test.ppm").printWriter()
