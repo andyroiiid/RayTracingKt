@@ -29,64 +29,32 @@ fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
     }
 }
 
-val glassMaterial = DielectricMaterial(1.5)
-
-fun generateSphere(world: HittableList, center: Vector3) {
-    val chooseMaterial = Random.nextDouble()
-    when {
-        chooseMaterial < 0.8 -> {
-            // diffuse
-            val albedo = Vector3.random() * Vector3.random()
-            val material = LambertianMaterial(albedo)
-            world.add(Sphere(center, 0.2, material))
-        }
-        chooseMaterial < 0.95 -> {
-            // metal
-            val albedo = Vector3.random() * 0.5 + 0.5
-            val roughness = Random.nextDouble() * 0.5 + 0.5
-            val material = MetalMaterial(albedo, roughness)
-            world.add(Sphere(center, 0.2, material))
-        }
-        else -> {
-            // glass
-            world.add(Sphere(center, 0.2, glassMaterial))
-        }
-    }
-}
-
 fun generateWorld(): HittableList {
     val world = HittableList()
 
-    val ground = LambertianMaterial(Vector3(0.5, 0.5, 0.5))
-    world.add(Sphere(Vector3(0.0, -1000.0, 0.0), 1000.0, ground))
-
-    val avoid = Vector3(4.0, 0.2, 0.0)
-    for (x in -8..8) {
-        for (y in -8..8) {
-            val center = Vector3(x + 0.9 * Random.nextDouble(), 0.2, y + 0.9 * Random.nextDouble())
-            if ((center - avoid).length() > 0.9) {
-                generateSphere(world, center)
-            }
-        }
-    }
-
+    val glassMaterial = DielectricMaterial(1.5)
+    world.add(XZRect(-10.0, -10.0, 10.0, 10.0, 0.0, true, LambertianMaterial(Vector3(0.5, 0.5, 0.5))))
     world.add(Sphere(Vector3(0.0, 1.0, 0.0), 1.0, glassMaterial))
     world.add(Sphere(Vector3(0.0, 1.0, 0.0), -0.9, glassMaterial))
-    world.add(Sphere(Vector3(-4.0, 1.0, 0.0), 1.0, LambertianMaterial(Vector3(0.4, 0.8, 1.0))))
-    world.add(Sphere(Vector3(4.0, 1.0, 0.0), 1.0, MetalMaterial(Vector3(0.7, 0.6, 0.5), 0.0)))
+    world.add(Sphere(Vector3(-2.0, 1.0, 0.0), 1.0, LambertianMaterial(Vector3(0.4, 0.8, 1.0))))
+    world.add(Sphere(Vector3(2.0, 1.0, 0.0), 1.0, MetalMaterial(Vector3(0.7, 0.6, 0.5), 0.0)))
 
     return world
 }
 
 fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int): List<MutableList<Int>> {
+    val position = Vector3(5.0, 5.0, 5.0)
+    val target = Vector3(0.0, 1.0, 0.0)
+    val up = Vector3(0.0, 1.0, 0.0)
+
     val camera = Camera(
-        Vector3(13.0, 2.0, 3.0),
-        Vector3(0.0, 0.0, 0.0),
-        Vector3(0.0, 1.0, 0.0),
-        PI / 6.0,
+        position,
+        target,
+        up,
+        PI / 4.0,
         imageWidth.toDouble() / imageHeight.toDouble(),
         0.1,
-        10.0
+        (target - position).length()
     )
 
     val world = generateWorld()
@@ -125,10 +93,10 @@ fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numTh
 }
 
 fun main() {
-    val imageWidth = 800
-    val imageHeight = 600
+    val imageWidth = 1024
+    val imageHeight = 1024
 
-    val outputs = render(imageWidth, imageHeight, 32, 32, 16)
+    val outputs = render(imageWidth, imageHeight, 64, 32, 16)
 
     val image = BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB)
     for (y in 0 until imageHeight) {
