@@ -34,7 +34,7 @@ fun generateWorld(): HittableList {
 
     val glassMaterial = DielectricMaterial(1.5)
     world.add(XZRect(-10.0, -10.0, 10.0, 10.0, 0.0, true, LambertianMaterial(Vector3(0.5, 0.5, 0.5))))
-    world.add(Sphere(Vector3(0.0, 1.0, 0.0), 1.0, glassMaterial))
+    world.add(Box(Vector3(-1.0, 0.0, -1.0), Vector3(1.0, 2.0, 1.0), glassMaterial))
     world.add(Sphere(Vector3(0.0, 1.0, 0.0), -0.9, glassMaterial))
     world.add(Sphere(Vector3(-2.0, 1.0, 0.0), 1.0, LambertianMaterial(Vector3(0.4, 0.8, 1.0))))
     world.add(Sphere(Vector3(2.0, 1.0, 0.0), 1.0, MetalMaterial(Vector3(0.7, 0.6, 0.5), 0.0)))
@@ -42,8 +42,8 @@ fun generateWorld(): HittableList {
     return world
 }
 
-fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int): List<MutableList<Int>> {
-    val position = Vector3(5.0, 5.0, 5.0)
+fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int): Array<IntArray> {
+    val position = Vector3(3.0, 4.0, 5.0)
     val target = Vector3(0.0, 1.0, 0.0)
     val up = Vector3(0.0, 1.0, 0.0)
 
@@ -59,9 +59,9 @@ fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numTh
 
     val world = generateWorld()
 
-    val outputs = List(imageHeight) { mutableListOf<Int>() }
+    val outputs = Array(imageHeight) { IntArray(imageWidth) }
     val nextLine = AtomicInteger(0)
-    val threads = List(numThreads) {
+    val threads = Array(numThreads) {
         thread(true) {
             while (true) {
                 val y = nextLine.getAndAdd(1)
@@ -77,7 +77,7 @@ fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numTh
                     }
                     color /= samples.toDouble()
                     color = gammaCorrect(color)
-                    output.add(Color(color.x.toFloat(), color.y.toFloat(), color.z.toFloat()).rgb)
+                    output[x] = Color(color.x.toFloat(), color.y.toFloat(), color.z.toFloat()).rgb
                 }
 
                 println("finished line $y")
@@ -96,14 +96,12 @@ fun main() {
     val imageWidth = 1024
     val imageHeight = 1024
 
-    val outputs = render(imageWidth, imageHeight, 64, 32, 16)
+    val outputs = render(imageWidth, imageHeight, 32, 32, 16)
 
     val image = BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB)
     for (y in 0 until imageHeight) {
         val outputY = imageHeight - 1 - y
-        for (x in 0 until imageWidth) {
-            image.setRGB(x, y, outputs[outputY][x])
-        }
+        image.setRGB(0, y, imageWidth, 1, outputs[outputY], 0, imageWidth)
     }
 
     ImageIO.write(image, "png", File("test.png"))

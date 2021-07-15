@@ -1,8 +1,4 @@
-class HittableList : Hittable() {
-    private val hittableList = ArrayList<Hittable>()
-
-    fun clear() = hittableList.clear()
-
+open class HittableList(private val hittableList: ArrayList<Hittable> = ArrayList()) : Hittable() {
     fun add(hittable: Hittable) = hittableList.add(hittable)
 
     override fun hit(ray: Ray, tMin: Double, tMax: Double): HitRecord? {
