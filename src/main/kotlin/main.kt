@@ -1,11 +1,14 @@
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
+import kotlin.text.StringBuilder
 import kotlin.random.Random
 
 fun colorToString(color: Vector3): String {
     val r = (color.x * 255).toInt()
     val g = (color.y * 255).toInt()
     val b = (color.z * 255).toInt()
-    return "$r $g $b"
+    return "$r $g $b\t"
 }
 
 fun raytraceSky(ray: Ray): Vector3 {
@@ -30,12 +33,8 @@ fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
     }
 }
 
-fun main() {
-    val imageWidth = 400
-    val imageHeight = 300
+fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int = 8): List<StringBuilder> {
     val aspectRatio = imageWidth.toDouble() / imageHeight.toDouble()
-    val samples = 32
-    val maxDepth = 32
 
     val camera = Camera(aspectRatio, 2.0)
 
@@ -51,23 +50,52 @@ fun main() {
     world.add(Sphere(Vector3(1.0, 0.0, -1.5), 0.5, metal))
     world.add(Sphere(Vector3(0.0, -100.5, -1.5), 100.0, blue))
 
+    val outputs = List(imageHeight) { StringBuilder() }
+
+    val nextLine = AtomicInteger(0)
+    val threads = List(numThreads) {
+        thread(true) {
+            while (true) {
+                val y = nextLine.getAndAdd(1)
+                if (y >= imageHeight) break
+
+                val output = outputs[y]
+                for (x in 0 until imageWidth) {
+                    var color = Vector3()
+                    repeat(samples) {
+                        val u = (x + Random.nextDouble()) / (imageWidth - 1).toDouble()
+                        val v = (y + Random.nextDouble()) / (imageHeight - 1).toDouble()
+                        color += raytrace(camera.getRay(u, v), world, maxDepth)
+                    }
+                    color /= samples.toDouble()
+                    color = gammaCorrect(color)
+                    output.append(colorToString(color))
+                }
+
+                println("finished line $y")
+            }
+        }
+    }
+
+    for (thread in threads) {
+        thread.join()
+    }
+
+    return outputs
+}
+
+fun main() {
+    val imageWidth = 800
+    val imageHeight = 600
+
+    val outputs = render(imageWidth, imageHeight, 64, 32)
+
     val out = File("test.ppm").printWriter()
     out.println("P3")
     out.println("$imageWidth $imageHeight")
     out.println("255")
-    for (y in (imageHeight - 1) downTo 0) {
-        for (x in 0 until imageWidth) {
-            var color = Vector3()
-            repeat(samples) {
-                val u = (x + Random.nextDouble()) / (imageWidth - 1).toDouble()
-                val v = (y + Random.nextDouble()) / (imageHeight - 1).toDouble()
-                color += raytrace(camera.getRay(u, v), world, maxDepth)
-            }
-            color /= samples.toDouble()
-            color = gammaCorrect(color)
-            out.println(colorToString(color))
-        }
-        println("finished line $y")
+    outputs.asReversed().forEach {
+        out.println(it.toString())
     }
     out.flush()
 }
