@@ -34,10 +34,59 @@ fun raytrace(ray: Ray, world: Hittable, depth: Int): Vector3 {
     }
 }
 
+val glassMaterial = DielectricMaterial(1.5)
+
+fun generateSphere(world: HittableList, center: Vector3) {
+    val chooseMaterial = Random.nextDouble()
+    when {
+        chooseMaterial < 0.8 -> {
+            // diffuse
+            val albedo = Vector3.random() * Vector3.random()
+            val material = LambertianMaterial(albedo)
+            world.add(Sphere(center, 0.2, material))
+        }
+        chooseMaterial < 0.95 -> {
+            // metal
+            val albedo = Vector3.random() * 0.5 + 0.5
+            val roughness = Random.nextDouble() * 0.5 + 0.5
+            val material = MetalMaterial(albedo, roughness)
+            world.add(Sphere(center, 0.2, material))
+        }
+        else -> {
+            // glass
+            world.add(Sphere(center, 0.2, glassMaterial))
+        }
+    }
+}
+
+fun generateWorld(): HittableList {
+    val world = HittableList()
+
+    val ground = LambertianMaterial(Vector3(0.5, 0.5, 0.5))
+    world.add(Sphere(Vector3(0.0, -1000.0, 0.0), 1000.0, ground))
+
+    val avoid = Vector3(4.0, 0.2, 0.0)
+    for (x in -8..8) {
+        for (y in -8..8) {
+            val center = Vector3(x + 0.9 * Random.nextDouble(), 0.2, y + 0.9 * Random.nextDouble())
+            if ((center - avoid).length() > 0.9) {
+                generateSphere(world, center)
+            }
+        }
+    }
+
+    world.add(Sphere(Vector3(0.0, 1.0, 0.0), 1.0, glassMaterial))
+    world.add(Sphere(Vector3(0.0, 1.0, 0.0), -0.9, glassMaterial))
+    world.add(Sphere(Vector3(-4.0, 1.0, 0.0), 1.0, LambertianMaterial(Vector3(0.4, 0.8, 1.0))))
+    world.add(Sphere(Vector3(4.0, 1.0, 0.0), 1.0, MetalMaterial(Vector3(0.7, 0.6, 0.5), 0.0)))
+
+    return world
+}
+
 fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numThreads: Int = 8): List<StringBuilder> {
     val aspectRatio = imageWidth.toDouble() / imageHeight.toDouble()
 
-    val position = Vector3(3.0, 3.0, 2.0)
+    val position = Vector3(13.0, 2.0, 3.0)
     val target = Vector3(0.0, 0.0, 0.0)
 
     val camera = Camera(
@@ -46,21 +95,11 @@ fun render(imageWidth: Int, imageHeight: Int, samples: Int, maxDepth: Int, numTh
         Vector3(0.0, 1.0, 0.0),
         PI / 6.0,
         aspectRatio,
-        1.0,
-        (target - position).length()
+        0.1,
+        10.0
     )
 
-    val ground = LambertianMaterial(Vector3(0.8, 0.8, 0.0))
-    val red = LambertianMaterial(Vector3(1.0, 0.0, 0.0))
-    val metal = MetalMaterial(Vector3(0.8, 0.6, 0.2), 0.3)
-    val glass = DielectricMaterial(1.5)
-
-    val world = HittableList()
-    world.add(Sphere(Vector3(-1.0, 0.0, 0.0), 0.5, glass))
-    world.add(Sphere(Vector3(-1.0, 0.0, 0.0), -0.45, glass))
-    world.add(Sphere(Vector3(0.0, 0.0, 0.0), 0.5, red))
-    world.add(Sphere(Vector3(1.0, 0.0, 0.0), 0.5, metal))
-    world.add(Sphere(Vector3(0.0, -100.5, 0.0), 100.0, ground))
+    val world = generateWorld()
 
     val outputs = List(imageHeight) { StringBuilder() }
 
